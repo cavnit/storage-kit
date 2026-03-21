@@ -88,7 +88,8 @@ public struct AWSSigner: Sendable {
         method: HTTPMethod = .GET,
         body: BodyData? = nil,
         date: Date = Date(),
-        expires: Int = 86400
+        expires: Int = 86400,
+        additionalQueryParams: [String: String] = [:]
     ) -> URL {
         let headers: HTTPHeaders = HTTPHeaders([("host", Self.hostValue(from: url))])
         var signingData: SigningData = SigningData(
@@ -111,6 +112,9 @@ public struct AWSSigner: Sendable {
         query += "&X-Amz-SignedHeaders=\(signingData.signedHeaders)"
         if let sessionToken: String = credentials.sessionToken {
             query += "&X-Amz-Security-Token=\(sessionToken.uriEncode())"
+        }
+        for (key, value) in additionalQueryParams {
+            query += "&\(key.uriEncode())=\(value.uriEncode())"
         }
 
         query = query.split(separator: "&")
