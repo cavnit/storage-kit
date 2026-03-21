@@ -88,19 +88,18 @@ public struct StorageClient: Sendable {
 
     /// Generate a presigned GET URL with content-disposition for download.
     public func presignedDownloadURL(key: String, filename: String, expires: Int = 900) throws -> String {
-        let disposition: String = "attachment;filename=\(filename)"
-        let encodedDisposition: String = disposition.uriEncode()
-        let urlString: String = "\(configuration.objectURL(for: key))?response-content-disposition=\(encodedDisposition)"
-
-        guard let url = URL(string: urlString) else {
+        guard let baseURL = URL(string: configuration.objectURL(for: key)) else {
             throw StorageError.invalidURL
         }
 
         let signer: AWSSigner = makeSigner()
         let signedURL: URL = signer.signURL(
-            url: url,
+            url: baseURL,
             method: .GET,
-            expires: expires
+            expires: expires,
+            additionalQueryParams: [
+                "response-content-disposition": "attachment;filename=\(filename)"
+            ]
         )
 
         return signedURL.absoluteString
