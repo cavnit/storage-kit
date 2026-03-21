@@ -55,7 +55,7 @@ public struct AWSSigner: Sendable {
         let dateString: String = AWSSigner.timestamp(date)
         var headers: HTTPHeaders = headers
         headers.add(name: "X-Amz-Date", value: dateString)
-        headers.add(name: "host", value: url.host ?? "")
+        headers.add(name: "host", value: Self.hostValue(from: url))
         headers.add(name: "x-amz-content-sha256", value: bodyHash)
         if let sessionToken: String = credentials.sessionToken {
             headers.add(name: "x-amz-security-token", value: sessionToken)
@@ -90,7 +90,7 @@ public struct AWSSigner: Sendable {
         date: Date = Date(),
         expires: Int = 86400
     ) -> URL {
-        let headers: HTTPHeaders = HTTPHeaders([("host", url.host ?? "")])
+        let headers: HTTPHeaders = HTTPHeaders([("host", Self.hostValue(from: url))])
         var signingData: SigningData = SigningData(
             url: url,
             method: method,
@@ -263,6 +263,14 @@ public struct AWSSigner: Sendable {
     /// Return a hex-encoded string buffer from an array of bytes.
     static func hexEncoded(_ buffer: [UInt8]) -> String {
         return buffer.map { String(format: "%02x", $0) }.joined(separator: "")
+    }
+
+    /// Return the host value for signing, including the port for non-standard ports.
+    static func hostValue(from url: URL) -> String {
+        if let port = url.port, port != 80, port != 443 {
+            return "\(url.host ?? ""):\(port)"
+        }
+        return url.host ?? ""
     }
 
     /// Create timestamp DateFormatter.
