@@ -27,7 +27,7 @@ public struct AWSSigner: Sendable {
 
     static let hashedEmptyBody: String = SHA256.hash(data: [UInt8]()).hexDigest()
 
-    nonisolated(unsafe) static private let timeStampDateFormatter: DateFormatter = createTimeStampDateFormatter()
+    static private let timeStampDateFormatter: DateFormatter = createTimeStampDateFormatter()
 
     /// Initialise the Signer class with AWS credentials.
     public init(credentials: any Credential, name: String, region: String) {
