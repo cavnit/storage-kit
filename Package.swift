@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "StorageKit",
+    name: "storage-kit",
     platforms: [
         .macOS(.v15),
     ],
