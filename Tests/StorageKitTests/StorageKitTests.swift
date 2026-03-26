@@ -4,8 +4,8 @@ import Testing
 @Suite("StorageKit Tests")
 struct StorageKitTests {
 
-    @Test("StorageConfiguration builds correct object URL for custom endpoint")
-    func configurationObjectURLCustomEndpoint() {
+    @Test("StorageConfiguration builds correct object URL for path-style endpoint")
+    func configurationObjectURLPathStyle() {
         let config: StorageConfiguration = StorageConfiguration(
             endpoint: "https://minio.example.com",
             accessKey: "test-key",
@@ -16,6 +16,19 @@ struct StorageKitTests {
 
         let url: String = config.objectURL(for: "documents/file.pdf")
         #expect(url == "https://minio.example.com/my-bucket/documents/file.pdf")
+    }
+
+    @Test("StorageConfiguration defaults to path-style when not specified")
+    func configurationDefaultsToPathStyle() {
+        let config: StorageConfiguration = StorageConfiguration(
+            endpoint: "https://s3.us-east-1.amazonaws.com",
+            accessKey: "test-key",
+            secretKey: "test-secret",
+            region: "us-east-1",
+            bucket: "my-bucket"
+        )
+
+        #expect(config.endpointStyle == .pathStyle)
     }
 
     @Test("StorageConfiguration strips trailing slash from endpoint")
@@ -30,6 +43,51 @@ struct StorageKitTests {
 
         let url: String = config.objectURL(for: "file.txt")
         #expect(url == "https://s3.us-east-1.amazonaws.com/my-bucket/file.txt")
+    }
+
+    @Test("StorageConfiguration builds correct object URL for virtual-hosted-style endpoint")
+    func configurationObjectURLVirtualHosted() {
+        let config: StorageConfiguration = StorageConfiguration(
+            endpoint: "https://abc123.r2.cloudflarestorage.com",
+            accessKey: "test-key",
+            secretKey: "test-secret",
+            region: "auto",
+            bucket: "my-bucket",
+            endpointStyle: .virtualHosted
+        )
+
+        let url: String = config.objectURL(for: "documents/file.pdf")
+        #expect(url == "https://my-bucket.abc123.r2.cloudflarestorage.com/documents/file.pdf")
+    }
+
+    @Test("StorageConfiguration virtual-hosted-style strips trailing slash")
+    func configurationObjectURLVirtualHostedTrailingSlash() {
+        let config: StorageConfiguration = StorageConfiguration(
+            endpoint: "https://abc123.r2.cloudflarestorage.com/",
+            accessKey: "test-key",
+            secretKey: "test-secret",
+            region: "auto",
+            bucket: "my-bucket",
+            endpointStyle: .virtualHosted
+        )
+
+        let url: String = config.objectURL(for: "file.txt")
+        #expect(url == "https://my-bucket.abc123.r2.cloudflarestorage.com/file.txt")
+    }
+
+    @Test("StorageConfiguration virtual-hosted-style preserves non-standard port")
+    func configurationObjectURLVirtualHostedWithPort() {
+        let config: StorageConfiguration = StorageConfiguration(
+            endpoint: "https://localhost:9000",
+            accessKey: "test-key",
+            secretKey: "test-secret",
+            region: "auto",
+            bucket: "my-bucket",
+            endpointStyle: .virtualHosted
+        )
+
+        let url: String = config.objectURL(for: "file.txt")
+        #expect(url == "https://my-bucket.localhost:9000/file.txt")
     }
 
     @Test("AWSSigner produces deterministic signature for same inputs")
